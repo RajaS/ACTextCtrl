@@ -3,6 +3,9 @@
 # Heavily borrowed ideas from http://wiki.wxpython.org/TextCtrlAutoComplete
 # Raja Selvaraj <rajajs@gmail.com>
 
+
+##  CAUTION: WORK IN PROGRESS ##
+
 import wx
 
 
@@ -13,13 +16,18 @@ class ACTextControl(wx.TextCtrl):
     Choices are presented to the user based on string being entered.
     If a string outside the choices list is entered, option may
     be given for user to add it to list of choices.
+    match_at_start - Should only choices beginning with text be shown ?
+    add_option - Should user be able to add new choices
     """
-    def __init__(self, parent, choices=[], add_option=False):
+    def __init__(self, parent, choices=[], match_at_start = False,
+                 add_option=False):
         wx.TextCtrl.__init__(self, parent, style=wx.TE_PROCESS_ENTER)
 
         self.all_choices = choices
+        self.match_at_start = match_at_start
         self.add_option = add_option
-
+        self.max_choices = 5   # maximum no. of choices to show
+        
         self.popup = ACPopup(self)
 
         self._set_bindings()
@@ -40,16 +48,46 @@ class ACTextControl(wx.TextCtrl):
         Pop up the popup,
         or update choices if its already visible
         """
+        txt = event.GetString()
+
+        # if txt is empty (after backspace), hide popup
+        if not txt:
+            if self.popup.IsShown:
+                self.popup.Show(False)
+                event.Skip()
+                return
+
+        # Bring up the popup if it is not there
         if not self.popup.IsShown():
             self.position_popup()
 
-        txt = event.GetString()
-        select_choices = [ch for ch in self.all_choices if txt in ch]
-            
-        self.popup._set_choices(select_choices)
+        # Select choices to display
+        if self.match_at_start:
+            select_choices = [ch for ch in self.all_choices
+                              if ch.startswith(txt)]
+        else:
+            select_choices = [ch for ch in self.all_choices if txt in ch]
 
-        if not self.popup.IsShown():
-            self.popup.Show()
+        # TODO:
+        # order the choices (alphabetical sort / frecency?)
+
+        if len(select_choices) == 0:
+            if not self.add_option:
+                if self.popup.IsShown():
+                    self.popup.Show(False)
+
+            else:
+                display = ['Add ' + txt]
+                self.popup._set_choices(display)
+                self.resize_popup(display, txt)
+
+        else:
+            # set up the popup and bring it on
+            self.popup._set_choices(select_choices)
+            self.resize_popup(select_choices, txt)
+        
+            if not self.popup.IsShown():
+                self.popup.Show()
         
 
     def position_popup(self):
@@ -58,9 +96,30 @@ class ACTextControl(wx.TextCtrl):
         left_x, upper_y = self.GetScreenPositionTuple()
         _, height = self.GetSizeTuple()
         self.popup.SetPosition((left_x, upper_y + height))
-        #self.popup._set_choices(self.all_choices)
-        #self.popup.Show()
 
+
+    def resize_popup(self, choices, entered_txt):
+        """Calculate the size for the popup to
+        accomodate the selected choices"""
+        # Handle empty list (no matching choices)
+        if len(choices) == 0:
+            choice_count = 3.5 # one line
+            longest = len(entered_txt) + 4 + 4 #4 for 'Add '
+
+        else:
+            # additional 3 lines needed to show all choices without scrollbar        
+            choice_count = min(self.max_choices, len(choices)) + 2.5
+            longest = max([len(choice) for choice in choices]) + 4
+
+        
+        charheight = self.popup.choicebox.GetCharHeight()
+        charwidth = self.popup.choicebox.GetCharWidth()
+
+        self.popupsize = wx.Size( charwidth*longest, charheight*choice_count )
+
+        self.popup.choicebox.SetSize(self.popupsize)
+        self.popup.SetClientSize(self.popupsize)
+        
 
     def on_key_down(self, event):
         """Handle key presses.
@@ -69,6 +128,7 @@ class ACTextControl(wx.TextCtrl):
         to be caught by ontext event"""
         skip = True
         visible = self.popup.IsShown() 
+
 
         # Escape key closes the popup if it is visible
         if event.GetKeyCode() == wx.WXK_ESCAPE:
@@ -110,9 +170,10 @@ def test():
     panel = wx.Panel(frm)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     
-    choices = ['cat', 'dog']
+    choices = ['cat', 'dog', 'rat', 'pig', 'tiger', 'elephant', 'ant',
+               'horse']
     
-    ctrl = ACTextControl(panel, choices=choices)
+    ctrl = ACTextControl(panel, choices=choices, add_option=True)
     sizer.Add(ctrl, 1, wx.ADJUST_MINSIZE, 10)
     
     panel.SetAutoLayout(True)
