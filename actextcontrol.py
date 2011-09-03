@@ -41,7 +41,10 @@ class ACTextControl(wx.TextCtrl):
         self.Bind(wx.EVT_TEXT, self.on_text, self)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down, self)
 
-
+        # loss of focus should hide the popup
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_focus_loss)
+        
+        
     def on_text(self, event):
         """
         On text entry in the textctrl,
@@ -96,6 +99,12 @@ class ACTextControl(wx.TextCtrl):
                 self.popup.Show()
         
 
+    def on_focus_loss(self, event):
+        """Close the popup when focus is lost"""
+        if self.popup.IsShown():
+            self.popup.Show(False)
+
+                
     def position_popup(self):
         """Calculate position for popup and
         display it"""
