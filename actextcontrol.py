@@ -52,6 +52,7 @@ class ACTextControl(wx.TextCtrl):
 
         # if txt is empty (after backspace), hide popup
         if not txt:
+            print 'no text'
             if self.popup.IsShown:
                 self.popup.Show(False)
                 event.Skip()
@@ -70,17 +71,22 @@ class ACTextControl(wx.TextCtrl):
 
         # TODO:
         # order the choices (alphabetical sort / frecency?)
-
+        print 'choices', select_choices
+            
         if len(select_choices) == 0:
+            print 'no choices'
             if not self.add_option:
                 if self.popup.IsShown():
                     self.popup.Show(False)
 
             else:
+                'add option is there'
                 display = ['Add ' + txt]
                 self.popup._set_choices(display)
                 self.resize_popup(display, txt)
-
+                if not self.popup.IsShown():
+                    self.popup.Show()
+                
         else:
             # set up the popup and bring it on
             self.popup._set_choices(select_choices)
