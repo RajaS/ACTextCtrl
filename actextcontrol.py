@@ -92,7 +92,7 @@ class ACTextControl(wx.TextCtrl):
                 
         else:
             # set up the popup and bring it on
-            self.popup._set_choices(select_choices)
+            self.popup._set_choices(select_choices, txt)
             self.resize_popup(select_choices, txt)
         
             if not self.popup.IsShown():
@@ -161,11 +161,11 @@ class ACPopup(wx.PopupWindow):
     """
     def __init__(self, parent):
         wx.PopupWindow.__init__(self, parent)
-        self.choicebox = wx.ListBox(self, -1, choices=[])
+        self.choicebox = wx.SimpleHtmlListBox(self, -1, choices=[])
         self.SetSize((100, 100))
         self.displayed_choices = []
 
-    def _set_choices(self, choices):
+    def _set_choices(self, choices, txt):
         """
         Clear existing choices and use the supplied choices
         Choices is a list of strings.
@@ -174,9 +174,27 @@ class ACPopup(wx.PopupWindow):
         if sorted(choices) == sorted(self.displayed_choices):
             pass
 
-        self.choicebox.Set(choices)
+        # Remove the current choices
+        self.choicebox.Clear()
+        
+        #self.choicebox.Append(['te<b>st</b>', 'te<b>st</b>'])
+        for ch in choices:
+            self.choicebox.Append(self.htmlformat(ch, txt))
+
         self.displayed_choices = choices
 
+
+    def htmlformat(self, text, substring):
+        """
+        For displaying in the popup, format the text
+        to highlight the substring in html
+        """
+        # empty substring
+        if len(substring) == 0:
+            return text
+
+        else:
+            return text.replace(substring, '<b>' + substring + '</b>')
         
 
 def test():
