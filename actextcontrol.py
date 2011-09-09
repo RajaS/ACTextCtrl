@@ -55,7 +55,6 @@ class ACTextControl(wx.TextCtrl):
 
         # if txt is empty (after backspace), hide popup
         if not txt:
-            print 'no text'
             if self.popup.IsShown:
                 self.popup.Show(False)
                 event.Skip()
@@ -74,18 +73,15 @@ class ACTextControl(wx.TextCtrl):
 
         # TODO:
         # order the choices (alphabetical sort / frecency?)
-        print 'choices', select_choices
             
         if len(select_choices) == 0:
-            print 'no choices'
             if not self.add_option:
                 if self.popup.IsShown():
                     self.popup.Show(False)
 
             else:
-                'add option is there'
                 display = ['Add ' + txt]
-                self.popup._set_choices(display)
+                self.popup._set_choices(display, 'Add')
                 self.resize_popup(display, txt)
                 if not self.popup.IsShown():
                     self.popup.Show()
@@ -201,18 +197,33 @@ def test():
     app = wx.PySimpleApp()
     frm = wx.Frame(None, -1, "Test", style=wx.DEFAULT_FRAME_STYLE)
     panel = wx.Panel(frm)
-    sizer = wx.BoxSizer(wx.HORIZONTAL)
     
     choices = ['cat', 'dog', 'rat', 'pig', 'tiger', 'elephant', 'ant',
                'horse']
+
+    label1 = wx.StaticText(panel, -1, 'Matches anywhere in string')
+    label2 = wx.StaticText(panel, -1, 'Matches only at beginning')
+    label3 = wx.StaticText(panel, -1, 'Allows new choices to be added')
+               
+    ctrl1 = ACTextControl(panel, choices=choices, add_option=False)
+    ctrl2 = ACTextControl(panel, choices=choices, match_at_start=True, add_option=False)
+    ctrl3 = ACTextControl(panel, choices=choices, add_option=True)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
     
-    ctrl = ACTextControl(panel, choices=choices, add_option=True)
-    sizer.Add(ctrl, 1, wx.ADJUST_MINSIZE, 10)
+    fgsizer = wx.FlexGridSizer(rows=3, cols=2, vgap=20, hgap=5)
+    fgsizer.AddMany([label1, ctrl1,
+                     label2, ctrl2,
+                     label3, ctrl3])
     
     panel.SetAutoLayout(True)
-    panel.SetSizer(sizer)
-    sizer.Fit(panel)
-    sizer.SetSizeHints(panel)
+    panel.SetSizer(fgsizer)
+    fgsizer.Fit(panel)
+    #sizer.SetSizeHints(panel)
+
+    sizer.Add(panel, 1, wx.ALL, 20)
+    frm.SetSizer(sizer)
+    
     panel.Layout()
     app.SetTopWindow(frm)
     frm.SetSize((400, 200))
