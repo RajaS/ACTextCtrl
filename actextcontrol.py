@@ -19,14 +19,14 @@ class ACTextControl(wx.TextCtrl):
     match_at_start - Should only choices beginning with text be shown ?
     add_option - Should user be able to add new choices
     """
-    def __init__(self, parent, choices=[], match_at_start = False,
+    def __init__(self, parent, candidates=[], match_at_start = False,
                  add_option=False):
         wx.TextCtrl.__init__(self, parent, style=wx.TE_PROCESS_ENTER)
 
-        self.all_choices = choices
+        self.all_candidates = candidates
         self.match_at_start = match_at_start
         self.add_option = add_option
-        self.max_choices = 5   # maximum no. of choices to show
+        self.max_candidates = 5   # maximum no. of candidates to show
         
         self.popup = ACPopup(self)
 
@@ -49,7 +49,7 @@ class ACTextControl(wx.TextCtrl):
         """
         On text entry in the textctrl,
         Pop up the popup,
-        or update choices if its already visible
+        or update candidates if its already visible
         """
         txt = event.GetString()
 
@@ -64,32 +64,32 @@ class ACTextControl(wx.TextCtrl):
         if not self.popup.IsShown():
             self.position_popup()
 
-        # Select choices to display
+        # Select candidates to display
         if self.match_at_start:
-            select_choices = [ch for ch in self.all_choices
+            select_candidates = [ch for ch in self.all_candidates
                               if ch.startswith(txt)]
         else:
-            select_choices = [ch for ch in self.all_choices if txt in ch]
+            select_candidates = [ch for ch in self.all_candidates if txt in ch]
 
         # TODO:
-        # order the choices (alphabetical sort / frecency?)
+        # order the candidates (alphabetical sort / frecency?)
             
-        if len(select_choices) == 0:
+        if len(select_candidates) == 0:
             if not self.add_option:
                 if self.popup.IsShown():
                     self.popup.Show(False)
 
             else:
                 display = ['Add ' + txt]
-                self.popup._set_choices(display, 'Add')
+                self.popup._set_candidates(display, 'Add')
                 self.resize_popup(display, txt)
                 if not self.popup.IsShown():
                     self.popup.Show()
                 
         else:
             # set up the popup and bring it on
-            self.popup._set_choices(select_choices, txt)
-            self.resize_popup(select_choices, txt)
+            self.popup._set_candidates(select_candidates, txt)
+            self.resize_popup(select_candidates, txt)
         
             if not self.popup.IsShown():
                 self.popup.Show()
@@ -109,26 +109,26 @@ class ACTextControl(wx.TextCtrl):
         self.popup.SetPosition((left_x, upper_y + height))
 
 
-    def resize_popup(self, choices, entered_txt):
+    def resize_popup(self, candidates, entered_txt):
         """Calculate the size for the popup to
-        accomodate the selected choices"""
-        # Handle empty list (no matching choices)
-        if len(choices) == 0:
-            choice_count = 3.5 # one line
+        accomodate the selected candidates"""
+        # Handle empty list (no matching candidates)
+        if len(candidates) == 0:
+            candidate_count = 3.5 # one line
             longest = len(entered_txt) + 4 + 4 #4 for 'Add '
 
         else:
-            # additional 3 lines needed to show all choices without scrollbar        
-            choice_count = min(self.max_choices, len(choices)) + 2.5
-            longest = max([len(choice) for choice in choices]) + 4
+            # additional 3 lines needed to show all candidates without scrollbar        
+            candidate_count = min(self.max_candidates, len(candidates)) + 2.5
+            longest = max([len(candidate) for candidate in candidates]) + 4
 
         
-        charheight = self.popup.choicebox.GetCharHeight()
-        charwidth = self.popup.choicebox.GetCharWidth()
+        charheight = self.popup.candidatebox.GetCharHeight()
+        charwidth = self.popup.candidatebox.GetCharWidth()
 
-        self.popupsize = wx.Size( charwidth*longest, charheight*choice_count )
+        self.popupsize = wx.Size( charwidth*longest, charheight*candidate_count )
 
-        self.popup.choicebox.SetSize(self.popupsize)
+        self.popup.candidatebox.SetSize(self.popupsize)
         self.popup.SetClientSize(self.popupsize)
         
 
@@ -139,45 +139,80 @@ class ACTextControl(wx.TextCtrl):
         to be caught by ontext event"""
         skip = True
         visible = self.popup.IsShown() 
-
-
+        sel = self.popup.candidatebox.GetSelection()
+        
         # Escape key closes the popup if it is visible
         if event.GetKeyCode() == wx.WXK_ESCAPE:
             if visible:
                 self.popup.Show(False)
-        
+
+        # Down key for navigation in list of candidates
+        elif event.GetKeyCode() == wx.WXK_DOWN:
+            if not visible:
+                skip = False
+                pass
+            if sel < self.popup.candidatebox.GetItemCount():
+                self.popup.candidatebox.SetSelection(sel + 1)
+            else:
+                skip = False
+
+        # Up key for navigation in list of candidates
+        elif event.GetKeyCode() == wx.WXK_UP:
+            if not visible:
+                skip = False
+                pass
+            if sel > -1:
+                self.popup.candidatebox.SetSelection(sel - 1)
+            else:
+                skip = False
+
+        # Enter - use current selection for text
+        elif event.GetKeyCode() == wx.WXK_RETURN:
+            if not visible:
+                pass
+            elif self.popup.candidatebox.GetSelection() > -1:
+                self.SetValue(
+                    self.html_unformat(self.popup.candidatebox.GetStringSelection()))
+                self.popup.Show(False)
+                
         if skip:
             event.Skip()
 
+
+    def html_unformat(self, html_string):
+        """Remove the bold tags from the string"""
+        return html_string.replace('<b>', '').replace('</b>', '')
+            
             
 
 class ACPopup(wx.PopupWindow):
     """
-    The popup that displays the autocomplete choices.
+    The popup that displays the candidates for
+    autocompleting the current text in the textctrl
     """
     def __init__(self, parent):
         wx.PopupWindow.__init__(self, parent)
-        self.choicebox = wx.SimpleHtmlListBox(self, -1, choices=[])
+        self.candidatebox = wx.SimpleHtmlListBox(self, -1, choices=[])
         self.SetSize((100, 100))
-        self.displayed_choices = []
+        self.displayed_candidates = []
 
-    def _set_choices(self, choices, txt):
+    def _set_candidates(self, candidates, txt):
         """
-        Clear existing choices and use the supplied choices
-        Choices is a list of strings.
+        Clear existing candidates and use the supplied candidates
+        Candidates is a list of strings.
         """
         # if there is no change, do not update
-        if sorted(choices) == sorted(self.displayed_choices):
+        if sorted(candidates) == sorted(self.displayed_candidates):
             pass
 
-        # Remove the current choices
-        self.choicebox.Clear()
+        # Remove the current candidates
+        self.candidatebox.Clear()
         
-        #self.choicebox.Append(['te<b>st</b>', 'te<b>st</b>'])
-        for ch in choices:
-            self.choicebox.Append(self.htmlformat(ch, txt))
+        #self.candidatebox.Append(['te<b>st</b>', 'te<b>st</b>'])
+        for ch in candidates:
+            self.candidatebox.Append(self.htmlformat(ch, txt))
 
-        self.displayed_choices = choices
+        self.displayed_candidates = candidates
 
 
     def htmlformat(self, text, substring):
@@ -198,16 +233,17 @@ def test():
     frm = wx.Frame(None, -1, "Test", style=wx.DEFAULT_FRAME_STYLE)
     panel = wx.Panel(frm)
     
-    choices = ['cat', 'dog', 'rat', 'pig', 'tiger', 'elephant', 'ant',
-               'horse']
+    candidates = ['cat', 'dog', 'rat', 'pig',
+               'tiger', 'elephant', 'ant',
+               'horse', 'anteater', 'giraffe']
 
     label1 = wx.StaticText(panel, -1, 'Matches anywhere in string')
     label2 = wx.StaticText(panel, -1, 'Matches only at beginning')
-    label3 = wx.StaticText(panel, -1, 'Allows new choices to be added')
+    label3 = wx.StaticText(panel, -1, 'Allows new candidates to be added')
                
-    ctrl1 = ACTextControl(panel, choices=choices, add_option=False)
-    ctrl2 = ACTextControl(panel, choices=choices, match_at_start=True, add_option=False)
-    ctrl3 = ACTextControl(panel, choices=choices, add_option=True)
+    ctrl1 = ACTextControl(panel, candidates=candidates, add_option=False)
+    ctrl2 = ACTextControl(panel, candidates=candidates, match_at_start=True, add_option=False)
+    ctrl3 = ACTextControl(panel, candidates=candidates, add_option=True)
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     
