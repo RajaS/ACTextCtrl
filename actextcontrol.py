@@ -66,15 +66,15 @@ class ACTextControl(wx.TextCtrl):
 
         # Select candidates to display
         if self.match_at_start:
-            select_candidates = [ch for ch in self.all_candidates
+            self.select_candidates = [ch for ch in self.all_candidates
                               if ch.startswith(txt)]
         else:
-            select_candidates = [ch for ch in self.all_candidates if txt in ch]
+            self.select_candidates = [ch for ch in self.all_candidates if txt in ch]
 
         # TODO:
         # order the candidates (alphabetical sort / frecency?)
             
-        if len(select_candidates) == 0:
+        if len(self.select_candidates) == 0:
             if not self.add_option:
                 if self.popup.IsShown():
                     self.popup.Show(False)
@@ -88,8 +88,8 @@ class ACTextControl(wx.TextCtrl):
                 
         else:
             # set up the popup and bring it on
-            self.popup._set_candidates(select_candidates, txt)
-            self.resize_popup(select_candidates, txt)
+            self.popup._set_candidates(self.select_candidates, txt)
+            self.resize_popup(self.select_candidates, txt)
         
             if not self.popup.IsShown():
                 self.popup.Show()
@@ -173,17 +173,23 @@ class ACTextControl(wx.TextCtrl):
             if not visible:
                 pass
             elif self.popup.candidatebox.GetSelection() > -1:
-                self.SetValue(
-                    self.html_unformat(self.popup.candidatebox.GetStringSelection()))
+                self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
                 self.popup.Show(False)
+
+        # Tab  - set selected choice as text
+        elif event.GetKeyCode() == wx.WXK_TAB:
+            if not visible:
+                pass
+            self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
+            skip = False                
                 
         if skip:
             event.Skip()
 
 
-    def html_unformat(self, html_string):
-        """Remove the bold tags from the string"""
-        return html_string.replace('<b>', '').replace('</b>', '')
+    # def html_unformat(self, html_string):
+    #     """Remove the bold tags from the string"""
+    #     return html_string.replace('<b>', '').replace('</b>', '')
             
             
 
