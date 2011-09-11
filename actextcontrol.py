@@ -178,19 +178,12 @@ class ACTextControl(wx.TextCtrl):
 
         # Tab  - set selected choice as text
         elif event.GetKeyCode() == wx.WXK_TAB:
-            if not visible:
-                pass
-            self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
-            skip = False                
+            if visible:
+                self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
+                skip = False                
                 
         if skip:
             event.Skip()
-
-
-    # def html_unformat(self, html_string):
-    #     """Remove the bold tags from the string"""
-    #     return html_string.replace('<b>', '').replace('</b>', '')
-            
             
 
 class ACPopup(wx.PopupWindow):
