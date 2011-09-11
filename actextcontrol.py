@@ -93,6 +93,8 @@ class ACTextControl(wx.TextCtrl):
         
             if not self.popup.IsShown():
                 self.popup.Show()
+
+            self.popup.candidatebox.SetSelection(0)
         
 
     def on_focus_loss(self, event):
