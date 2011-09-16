@@ -226,7 +226,7 @@ class ACPopup(wx.PopupWindow):
             return text
 
         else:
-            return text.replace(substring, '<b>' + substring + '</b>')
+            return text.replace(substring, '<b>' + substring + '</b>', 1)
         
 
 def test():
