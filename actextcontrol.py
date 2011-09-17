@@ -171,7 +171,14 @@ class ACTextControl(wx.TextCtrl):
         # Enter - use current selection for text
         elif event.GetKeyCode() == wx.WXK_RETURN:
             if not visible:
+                #TODO: trigger event?
                 pass
+            # Add option is only displayed
+            elif len(self.select_candidates) == 0:
+                self.all_candidates.append(self.GetValue())
+                self.popup.Show(False)
+                
+            #TODO: if popup is visible, but not selected, close it
             elif self.popup.candidatebox.GetSelection() > -1:
                 self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
                 self.popup.Show(False)
@@ -180,12 +187,15 @@ class ACTextControl(wx.TextCtrl):
         elif event.GetKeyCode() == wx.WXK_TAB:
             if visible:
                 self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
+                #TODO: use SetInsertionPoint to set cursor position
                 skip = False                
                 
         if skip:
             event.Skip()
             
 
+
+            
 class ACPopup(wx.PopupWindow):
     """
     The popup that displays the candidates for
