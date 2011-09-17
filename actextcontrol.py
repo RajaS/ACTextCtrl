@@ -187,7 +187,8 @@ class ACTextControl(wx.TextCtrl):
         elif event.GetKeyCode() == wx.WXK_TAB:
             if visible:
                 self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
-                #TODO: use SetInsertionPoint to set cursor position
+                # set cursor at end of text
+                self.SetInsertionPointEnd()
                 skip = False                
                 
         if skip:
