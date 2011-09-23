@@ -31,7 +31,9 @@ class ACTextControl(wx.TextCtrl):
         self.popup = ACPopup(self)
 
         self._set_bindings()
-        
+
+        self._screenheight = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
+
 
     def _set_bindings(self):
         """
@@ -61,8 +63,8 @@ class ACTextControl(wx.TextCtrl):
                 return
 
         # Bring up the popup if it is not there
-        if not self.popup.IsShown():
-            self.position_popup()
+        # if not self.popup.IsShown():
+        #     self.position_popup()
 
         # Select candidates to display
         if self.match_at_start:
@@ -83,6 +85,7 @@ class ACTextControl(wx.TextCtrl):
                 display = ['Add ' + txt]
                 self.popup._set_candidates(display, 'Add')
                 self.resize_popup(display, txt)
+                self.position_popup()
                 if not self.popup.IsShown():
                     self.popup.Show()
                 
@@ -90,7 +93,8 @@ class ACTextControl(wx.TextCtrl):
             # set up the popup and bring it on
             self.popup._set_candidates(self.select_candidates, txt)
             self.resize_popup(self.select_candidates, txt)
-        
+            self.position_popup()
+            
             if not self.popup.IsShown():
                 self.popup.Show()
 
@@ -108,7 +112,12 @@ class ACTextControl(wx.TextCtrl):
         display it"""
         left_x, upper_y = self.GetScreenPositionTuple()
         _, height = self.GetSizeTuple()
-        self.popup.SetPosition((left_x, upper_y + height))
+        popup_width, popup_height = self.popupsize
+        
+        if upper_y + height + popup_height > self._screenheight:
+            self.popup.SetPosition((left_x, upper_y - popup_height))
+        else:
+            self.popup.SetPosition((left_x, upper_y + height))
 
 
     def resize_popup(self, candidates, entered_txt):
