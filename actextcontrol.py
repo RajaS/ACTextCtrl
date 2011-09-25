@@ -32,8 +32,9 @@ class ACTextControl(wx.TextCtrl):
 
         self._set_bindings()
 
+        #
         self._screenheight = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
-
+        self._popdown = True # Does the popup go down from the textctrl ?
 
     def _set_bindings(self):
         """
@@ -62,9 +63,6 @@ class ACTextControl(wx.TextCtrl):
                 event.Skip()
                 return
 
-        # Bring up the popup if it is not there
-        # if not self.popup.IsShown():
-        #     self.position_popup()
 
         # Select candidates to display
         if self.match_at_start:
@@ -91,14 +89,24 @@ class ACTextControl(wx.TextCtrl):
                 
         else:
             # set up the popup and bring it on
-            self.popup._set_candidates(self.select_candidates, txt)
+            #self.popup._set_candidates(sorted(self.select_candidates), txt)
             self.resize_popup(self.select_candidates, txt)
             self.position_popup()
+
+            self.select_candidates.sort()
             
+            if self._popdown:
+                # TODO: Allow custom ordering
+                self.popup._set_candidates(self.select_candidates, txt)
+                self.popup.candidatebox.SetSelection(0)
+            else:
+                # TODO: what is most efficient way to reverse sort
+                self.select_candidates.reverse()
+                self.popup._set_candidates(self.select_candidates, txt)
+                self.popup.candidatebox.SetSelection(len(self.select_candidates)-1)
+
             if not self.popup.IsShown():
                 self.popup.Show()
-
-            self.popup.candidatebox.SetSelection(0)
         
 
     def on_focus_loss(self, event):
@@ -115,8 +123,10 @@ class ACTextControl(wx.TextCtrl):
         popup_width, popup_height = self.popupsize
         
         if upper_y + height + popup_height > self._screenheight:
+            self._popdown = False
             self.popup.SetPosition((left_x, upper_y - popup_height))
         else:
+            self._popdown = True
             self.popup.SetPosition((left_x, upper_y + height))
 
 
@@ -223,7 +233,7 @@ class ACPopup(wx.PopupWindow):
         Candidates is a list of strings.
         """
         # if there is no change, do not update
-        if sorted(candidates) == sorted(self.displayed_candidates):
+        if candidates == sorted(self.displayed_candidates):
             pass
 
         # Remove the current candidates
