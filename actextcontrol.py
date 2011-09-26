@@ -89,7 +89,6 @@ class ACTextControl(wx.TextCtrl):
                 
         else:
             # set up the popup and bring it on
-            #self.popup._set_candidates(sorted(self.select_candidates), txt)
             self.resize_popup(self.select_candidates, txt)
             self.position_popup()
 
@@ -100,7 +99,6 @@ class ACTextControl(wx.TextCtrl):
                 self.popup._set_candidates(self.select_candidates, txt)
                 self.popup.candidatebox.SetSelection(0)
             else:
-                # TODO: what is most efficient way to reverse sort
                 self.select_candidates.reverse()
                 self.popup._set_candidates(self.select_candidates, txt)
                 self.popup.candidatebox.SetSelection(len(self.select_candidates)-1)
