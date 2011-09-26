@@ -19,4 +19,4 @@ allow the user to add this text to the choices available.
 Note that this is still in the early changes. As of now, this has only been
 tested on Linux with Python 2.6.6 and WxPython 2.8.11.
 
-![](screenshot.png)
+![](https://github.com/RajaS/ACTextCtrl/raw/master/screenshot.png)
