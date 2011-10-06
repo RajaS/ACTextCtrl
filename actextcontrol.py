@@ -192,7 +192,8 @@ class ACTextControl(wx.TextCtrl):
                 pass
             # Add option is only displayed
             elif len(self.select_candidates) == 0:
-                self.all_candidates.append(self.GetValue())
+                if self.popup.candidatebox.GetSelection() == 0:
+                    self.all_candidates.append(self.GetValue())
                 self.popup.Show(False)
                 
             #TODO: if popup is visible, but not selected, close it
