@@ -41,14 +41,14 @@ class ACTextControl(wx.TextCtrl):
         One place to setup all the bindings
         """
         # text entry triggers update of the popup window
-        self.Bind(wx.EVT_TEXT, self.on_text, self)
-        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down, self)
+        self.Bind(wx.EVT_TEXT, self._on_text, self)
+        self.Bind(wx.EVT_KEY_DOWN, self._on_key_down, self)
 
         # loss of focus should hide the popup
-        self.Bind(wx.EVT_KILL_FOCUS, self.on_focus_loss)
+        self.Bind(wx.EVT_KILL_FOCUS, self._on_focus_loss)
         
         
-    def on_text(self, event):
+    def _on_text(self, event):
         """
         On text entry in the textctrl,
         Pop up the popup,
@@ -82,15 +82,15 @@ class ACTextControl(wx.TextCtrl):
             else:
                 display = ['Add ' + txt]
                 self.popup._set_candidates(display, 'Add')
-                self.resize_popup(display, txt)
-                self.position_popup()
+                self._resize_popup(display, txt)
+                self._position_popup()
                 if not self.popup.IsShown():
                     self.popup.Show()
                 
         else:
             # set up the popup and bring it on
-            self.resize_popup(self.select_candidates, txt)
-            self.position_popup()
+            self._resize_popup(self.select_candidates, txt)
+            self._position_popup()
 
             self.select_candidates.sort()
             
@@ -107,13 +107,13 @@ class ACTextControl(wx.TextCtrl):
                 self.popup.Show()
         
 
-    def on_focus_loss(self, event):
+    def _on_focus_loss(self, event):
         """Close the popup when focus is lost"""
         if self.popup.IsShown():
             self.popup.Show(False)
 
                 
-    def position_popup(self):
+    def _position_popup(self):
         """Calculate position for popup and
         display it"""
         left_x, upper_y = self.GetScreenPositionTuple()
@@ -128,7 +128,7 @@ class ACTextControl(wx.TextCtrl):
             self.popup.SetPosition((left_x, upper_y + height))
 
 
-    def resize_popup(self, candidates, entered_txt):
+    def _resize_popup(self, candidates, entered_txt):
         """Calculate the size for the popup to
         accomodate the selected candidates"""
         # Handle empty list (no matching candidates)
@@ -151,7 +151,7 @@ class ACTextControl(wx.TextCtrl):
         self.popup.SetClientSize(self.popupsize)
         
 
-    def on_key_down(self, event):
+    def _on_key_down(self, event):
         """Handle key presses.
         Special keys are handled appropriately.
         For other keys, the event is skipped and allowed
@@ -213,6 +213,12 @@ class ACTextControl(wx.TextCtrl):
             event.Skip()
             
 
+    def get_choices(self):
+        """Return the current choices.
+        Useful if choices have been added by the user"""
+        return self.all_candidates        
+
+
 
             
 class ACPopup(wx.PopupWindow):
@@ -240,12 +246,12 @@ class ACPopup(wx.PopupWindow):
         
         #self.candidatebox.Append(['te<b>st</b>', 'te<b>st</b>'])
         for ch in candidates:
-            self.candidatebox.Append(self.htmlformat(ch, txt))
+            self.candidatebox.Append(self._htmlformat(ch, txt))
 
         self.displayed_candidates = candidates
 
 
-    def htmlformat(self, text, substring):
+    def _htmlformat(self, text, substring):
         """
         For displaying in the popup, format the text
         to highlight the substring in html
@@ -274,6 +280,7 @@ def test():
     ctrl1 = ACTextControl(panel, candidates=candidates, add_option=False)
     ctrl2 = ACTextControl(panel, candidates=candidates, match_at_start=True, add_option=False)
     ctrl3 = ACTextControl(panel, candidates=candidates, add_option=True)
+
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     
