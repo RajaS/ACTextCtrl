@@ -71,8 +71,6 @@ class ACTextControl(wx.TextCtrl):
         else:
             self.select_candidates = [ch for ch in self.all_candidates if txt in ch]
 
-        # TODO:
-        # order the candidates (alphabetical sort / frecency?)
             
         if len(self.select_candidates) == 0:
             if not self.add_option:
@@ -196,7 +194,9 @@ class ACTextControl(wx.TextCtrl):
                     self.all_candidates.append(self.GetValue())
                 self.popup.Show(False)
                 
-            #TODO: if popup is visible, but not selected, close it
+            elif self.popup.candidatebox.GetSelection() == -1:
+                self.popup.Show(False)
+
             elif self.popup.candidatebox.GetSelection() > -1:
                 self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
                 self.popup.Show(False)
