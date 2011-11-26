@@ -96,6 +96,7 @@ class ACTextControl(wx.TextCtrl):
                 # TODO: Allow custom ordering
                 self.popup._set_candidates(self.select_candidates, txt)
                 self.popup.candidatebox.SetSelection(0)
+                
             else:
                 self.select_candidates.reverse()
                 self.popup._set_candidates(self.select_candidates, txt)
@@ -168,7 +169,8 @@ class ACTextControl(wx.TextCtrl):
             if not visible:
                 skip = False
                 pass
-            if sel < self.popup.candidatebox.GetItemCount():
+            # 
+            if sel + 1 < self.popup.candidatebox.GetItemCount():
                 self.popup.candidatebox.SetSelection(sel + 1)
             else:
                 skip = False
@@ -282,9 +284,9 @@ def test():
     ctrl3 = ACTextControl(panel, candidates=candidates, add_option=True)
 
 
-    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    #sizer = wx.BoxSizer(wx.HORIZONTAL)
     
-    fgsizer = wx.FlexGridSizer(rows=3, cols=2, vgap=20, hgap=5)
+    fgsizer = wx.FlexGridSizer(rows=3, cols=2, vgap=20, hgap=10)
     fgsizer.AddMany([label1, ctrl1,
                      label2, ctrl2,
                      label3, ctrl3])
@@ -294,8 +296,8 @@ def test():
     fgsizer.Fit(panel)
     #sizer.SetSizeHints(panel)
 
-    sizer.Add(panel, 1, wx.ALL, 20)
-    frm.SetSizer(sizer)
+    #sizer.Add(panel, 1, wx.ALL, 5)
+    #frm.SetSizer(sizer)
     
     panel.Layout()
     app.SetTopWindow(frm)
