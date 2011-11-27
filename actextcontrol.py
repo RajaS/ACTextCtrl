@@ -46,8 +46,7 @@ class ACTextControl(wx.TextCtrl):
 
         # loss of focus should hide the popup
         self.Bind(wx.EVT_KILL_FOCUS, self._on_focus_loss)
-        
-        
+
     def _on_text(self, event):
         """
         On text entry in the textctrl,
@@ -283,8 +282,10 @@ def test():
     ctrl2 = ACTextControl(panel, candidates=candidates, match_at_start=True, add_option=False)
     ctrl3 = ACTextControl(panel, candidates=candidates, add_option=True)
 
-
+    
     #sizer = wx.BoxSizer(wx.HORIZONTAL)
+    ctrl1.Bind(wx.EVT_TEXT_ENTER, one_enter_key)
+
     
     fgsizer = wx.FlexGridSizer(rows=3, cols=2, vgap=20, hgap=10)
     fgsizer.AddMany([label1, ctrl1,
@@ -294,16 +295,15 @@ def test():
     panel.SetAutoLayout(True)
     panel.SetSizer(fgsizer)
     fgsizer.Fit(panel)
-    #sizer.SetSizeHints(panel)
-
-    #sizer.Add(panel, 1, wx.ALL, 5)
-    #frm.SetSizer(sizer)
     
     panel.Layout()
     app.SetTopWindow(frm)
     frm.SetSize((400, 200))
     frm.Show()
     app.MainLoop()
+
+def on_enter_key()
+    print 'Enter key pressed'
 
 
 if __name__ == '__main__':
