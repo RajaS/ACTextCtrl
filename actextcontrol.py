@@ -2,13 +2,10 @@
 # Written to satisfy my need for a text entry widget with autocomplete.
 # Heavily borrowed ideas from http://wiki.wxpython.org/TextCtrlAutoComplete
 # Raja Selvaraj <rajajs@gmail.com>
+# version 0.1
 
-
-##  CAUTION: WORK IN PROGRESS ##
 
 import wx
-
-
 
 class ACTextControl(wx.TextCtrl):
     """
