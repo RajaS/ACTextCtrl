@@ -200,6 +200,7 @@ class ACTextControl(wx.TextCtrl):
 
             elif self.popup.candidatebox.GetSelection() > -1:
                 self.SetValue(self.select_candidates[self.popup.candidatebox.GetSelection()])
+                self.SetInsertionPointEnd()
                 self.popup.Show(False)
 
         # Tab  - set selected choice as text
@@ -284,7 +285,7 @@ def test():
 
     
     #sizer = wx.BoxSizer(wx.HORIZONTAL)
-    ctrl1.Bind(wx.EVT_TEXT_ENTER, one_enter_key)
+    ctrl1.Bind(wx.EVT_TEXT_ENTER, on_enter_key)
 
     
     fgsizer = wx.FlexGridSizer(rows=3, cols=2, vgap=20, hgap=10)
@@ -302,7 +303,7 @@ def test():
     frm.Show()
     app.MainLoop()
 
-def on_enter_key()
+def on_enter_key(evt):
     print 'Enter key pressed'
 
 
