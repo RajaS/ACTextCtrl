@@ -17,6 +17,6 @@ match. When text is entered that does not have a match, an option exists to
 allow the user to add this text to the choices available.
 
 Note that this is still in the early changes. As of now, this has only been
-tested on Linux with Python 2.6.6 and WxPython 2.8.11.
+tested on Linux with Python 2.6 and 2.7 and WxPython 2.8.
 
 ![](https://github.com/RajaS/ACTextCtrl/raw/master/screenshot.png)
