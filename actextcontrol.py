@@ -2,8 +2,12 @@
 # Written to satisfy my need for a text entry widget with autocomplete.
 # Heavily borrowed ideas from http://wiki.wxpython.org/TextCtrlAutoComplete
 # Raja Selvaraj <rajajs@gmail.com>
-# version 0.1
 
+
+# version 0.2
+#  - Added option to use case sensitive matches, default is false
+
+# version 0.1
 
 import wx
 
@@ -15,21 +19,22 @@ class ACTextControl(wx.TextCtrl):
     be given for user to add it to list of choices.
     match_at_start - Should only choices beginning with text be shown ?
     add_option - Should user be able to add new choices
+    case_sensitive - Only case sensitive matches
     """
     def __init__(self, parent, candidates=[], match_at_start = False,
-                 add_option=False):
+                 add_option=False, case_sensitive=False):
         wx.TextCtrl.__init__(self, parent, style=wx.TE_PROCESS_ENTER)
 
         self.all_candidates = candidates
         self.match_at_start = match_at_start
         self.add_option = add_option
+        self.case_sensitive = case_sensitive
         self.max_candidates = 5   # maximum no. of candidates to show
         
         self.popup = ACPopup(self)
 
         self._set_bindings()
 
-        #
         self._screenheight = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
         self._popdown = True # Does the popup go down from the textctrl ?
 
@@ -43,14 +48,15 @@ class ACTextControl(wx.TextCtrl):
 
         # loss of focus should hide the popup
         self.Bind(wx.EVT_KILL_FOCUS, self._on_focus_loss)
-
+        self.Bind(wx.EVT_SET_FOCUS, self._on_focus)
+        
     def _on_text(self, event):
         """
         On text entry in the textctrl,
         Pop up the popup,
         or update candidates if its already visible
         """
-        txt = event.GetString()
+        txt = self.GetValue()
 
         # if txt is empty (after backspace), hide popup
         if not txt:
@@ -59,14 +65,17 @@ class ACTextControl(wx.TextCtrl):
                 event.Skip()
                 return
 
-
-        # Select candidates to display
-        if self.match_at_start:
+        # select candidates
+        if self.match_at_start and self.case_sensitive:
             self.select_candidates = [ch for ch in self.all_candidates
                               if ch.startswith(txt)]
-        else:
+        elif self.match_at_start and not self.case_sensitive:
+            self.select_candidates = [ch for ch in self.all_candidates
+                                      if ch.lower().startswith(txt.lower())]
+        elif self.case_sensitive and not self.match_at_start:
             self.select_candidates = [ch for ch in self.all_candidates if txt in ch]
-
+        else:
+            self.select_candidates = [ch for ch in self.all_candidates if txt.lower() in ch.lower()]
             
         if len(self.select_candidates) == 0:
             if not self.add_option:
@@ -82,32 +91,50 @@ class ACTextControl(wx.TextCtrl):
                     self.popup.Show()
                 
         else:
+            self._show_popup(self.select_candidates, txt)
+
+
+    def _show_popup(self, candidates, txt):
             # set up the popup and bring it on
-            self._resize_popup(self.select_candidates, txt)
+            self._resize_popup(candidates, txt)
             self._position_popup()
 
-            self.select_candidates.sort()
+            candidates.sort()
             
             if self._popdown:
                 # TODO: Allow custom ordering
-                self.popup._set_candidates(self.select_candidates, txt)
+                self.popup._set_candidates(candidates, txt)
                 self.popup.candidatebox.SetSelection(0)
                 
             else:
-                self.select_candidates.reverse()
-                self.popup._set_candidates(self.select_candidates, txt)
-                self.popup.candidatebox.SetSelection(len(self.select_candidates)-1)
+                candidates.reverse()
+                self.popup._set_candidates(candidates, txt)
+                self.popup.candidatebox.SetSelection(len(candidates)-1)
 
             if not self.popup.IsShown():
                 self.popup.Show()
         
 
+                
     def _on_focus_loss(self, event):
         """Close the popup when focus is lost"""
         if self.popup.IsShown():
             self.popup.Show(False)
 
-                
+            
+    def _on_focus(self, event):
+        """
+        When focus is gained,
+        if empty, show all candidates,
+        else, show matches
+        """
+        txt =  self.GetValue()
+        if txt == '':
+            self._show_popup(self.all_candidates, '')
+        else:
+            self._on_text(event)
+
+            
     def _position_popup(self):
         """Calculate position for popup and
         display it"""
@@ -268,27 +295,27 @@ def test():
     frm = wx.Frame(None, -1, "Test", style=wx.DEFAULT_FRAME_STYLE)
     panel = wx.Panel(frm)
     
-    candidates = ['cat', 'dog', 'rat', 'pig',
+    candidates = ['cat', 'Cow', 'dog', 'rat', 'Raccoon', 'pig',
                'tiger', 'elephant', 'ant',
-               'horse', 'anteater', 'giraffe']
+               'horse', 'Anteater', 'giraffe']
 
     label1 = wx.StaticText(panel, -1, 'Matches anywhere in string')
     label2 = wx.StaticText(panel, -1, 'Matches only at beginning')
-    label3 = wx.StaticText(panel, -1, 'Allows new candidates to be added')
+    label3 = wx.StaticText(panel, -1, 'Matches at beginning, case sensitive')
+    label4 = wx.StaticText(panel, -1, 'Allows new candidates to be added')
                
     ctrl1 = ACTextControl(panel, candidates=candidates, add_option=False)
     ctrl2 = ACTextControl(panel, candidates=candidates, match_at_start=True, add_option=False)
-    ctrl3 = ACTextControl(panel, candidates=candidates, add_option=True)
+    ctrl3 = ACTextControl(panel, candidates=candidates, match_at_start=True,
+                          add_option=False, case_sensitive=True)
+    ctrl4 = ACTextControl(panel, candidates=candidates, add_option=True)
 
     
-    #sizer = wx.BoxSizer(wx.HORIZONTAL)
-    ctrl1.Bind(wx.EVT_TEXT_ENTER, on_enter_key)
-
-    
-    fgsizer = wx.FlexGridSizer(rows=3, cols=2, vgap=20, hgap=10)
+    fgsizer = wx.FlexGridSizer(rows=4, cols=2, vgap=20, hgap=10)
     fgsizer.AddMany([label1, ctrl1,
                      label2, ctrl2,
-                     label3, ctrl3])
+                     label3, ctrl3,
+                     label4, ctrl4])
     
     panel.SetAutoLayout(True)
     panel.SetSizer(fgsizer)
@@ -296,12 +323,9 @@ def test():
     
     panel.Layout()
     app.SetTopWindow(frm)
-    frm.SetSize((400, 200))
+    frm.SetSize((400, 250))
     frm.Show()
     app.MainLoop()
-
-def on_enter_key(evt):
-    print 'Enter key pressed'
 
 
 if __name__ == '__main__':
