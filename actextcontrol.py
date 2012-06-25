@@ -30,7 +30,7 @@ class ACTextControl(wx.TextCtrl):
         self.add_option = add_option
         self.case_sensitive = case_sensitive
         self.max_candidates = 5   # maximum no. of candidates to show
-        
+        self.select_candidates = []
         self.popup = ACPopup(self)
 
         self._set_bindings()
@@ -130,6 +130,7 @@ class ACTextControl(wx.TextCtrl):
         """
         txt =  self.GetValue()
         if txt == '':
+            self.select_candidates = self.all_candidates
             self._show_popup(self.all_candidates, '')
         else:
             self._on_text(event)
