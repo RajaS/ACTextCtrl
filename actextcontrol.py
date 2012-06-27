@@ -50,6 +50,16 @@ class ACTextControl(wx.TextCtrl):
         self.Bind(wx.EVT_KILL_FOCUS, self._on_focus_loss)
         self.Bind(wx.EVT_SET_FOCUS, self._on_focus)
         
+    
+    def SetValue(self, value):
+        """
+        Directly calling setvalue triggers textevent
+        which results in popup appearing.
+        To avoid this, call changevalue
+        """
+        super(ACTextControl, self).ChangeValue(value)
+
+
     def _on_text(self, event):
         """
         On text entry in the textctrl,
@@ -326,7 +336,11 @@ def test():
     app.SetTopWindow(frm)
     frm.SetSize((400, 250))
     frm.Show()
+
+    ctrl1.SetValue('cat')
+
     app.MainLoop()
+
 
 
 if __name__ == '__main__':
